@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Państwa Miasta Game</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Permanent+Marker&display=swap" rel="stylesheet">
+  <!-- Google API Platform Script -->
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    :root {
+      --font-display: 'Inter', system-ui, sans-serif;
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --color-primary: 2 132 199; /* sky-600 */
+      --color-primary-hover: 3 105 161; /* sky-700 */
+      --color-secondary: 245 158 11; /* amber-500 */
+      --color-secondary-hover: 217 119 6; /* amber-600 */
+      --color-background: 30 41 59; /* slate-800 */
+      --color-surface: 51 65 85; /* slate-700 */
+      --color-text-primary: 248 250 252; /* slate-50 */
+      --color-text-secondary: 156 163 175; /* slate-400 - Increased contrast */
+      --color-danger: 220 38 38; /* red-600 */
+      --color-success: 22 163 74; /* green-600 */
+      --color-body: 15 23 42; /* slate-900 */
+    }
+
+    .theme-classic {
+      --font-display: 'Permanent Marker', cursive;
+    }
+
+    .theme-modern {
+      --font-display: 'Inter', system-ui, sans-serif;
+      --color-primary: 6 182 212; /* cyan-500 */
+      --color-primary-hover: 8 145 178; /* cyan-600 */
+      --color-secondary: 34 211 238; /* cyan-400 */
+      --color-secondary-hover: 103 232 249; /* cyan-300 */
+      --color-background: 17 24 39; /* gray-900 */
+      --color-surface: 31 41 55; /* gray-800 */
+      --color-text-primary: 243 244 246; /* gray-100 */
+      --color-text-secondary: 107 114 128; /* gray-500 - Increased contrast */
+      --color-body: 17 24 39; /* gray-900 */
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: 'var(--font-display)',
+          },
+          colors: {
+            'primary': 'rgb(var(--color-primary) / <alpha-value>)',
+            'primary-hover': 'rgb(var(--color-primary-hover) / <alpha-value>)',
+            'secondary': 'rgb(var(--color-secondary) / <alpha-value>)',
+            'secondary-hover': 'rgb(var(--color-secondary-hover) / <alpha-value>)',
+            'background': 'rgb(var(--color-background) / <alpha-value>)',
+            'surface': 'rgb(var(--color-surface) / <alpha-value>)',
+            'text-primary': 'rgb(var(--color-text-primary) / <alpha-value>)',
+            'text-secondary': 'rgb(var(--color-text-secondary) / <alpha-value>)',
+            'danger': 'rgb(var(--color-danger) / <alpha-value>)',
+            'success': 'rgb(var(--color-success) / <alpha-value>)',
+          },
+          animation: {
+            'spin-slow': 'spin 3s linear infinite',
+          }
+        }
+      }
+    }
+  </script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@^19.2.0/client",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.6.1",
+    "react-hot-toast": "https://esm.sh/react-hot-toast@^2.5.2",
+    "framer-motion": "https://esm.sh/framer-motion@^12.15.0",
+    "nanoid": "https://esm.sh/nanoid@5.0.7",
+    "@google/genai": "https://esm.sh/@google/genai@^1.3.0",
+    "socket.io-client": "https://esm.sh/socket.io-client@^4.7.5",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "vite": "https://aistudiocdn.com/vite@^7.1.9",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.0.4"
+  }
+}
+</script>
+<style>
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-body);
+    color: var(--color-text-primary);
+  }
+
+  body.app-fullscreen {
+    overflow: hidden; 
+  }
+
+  body.app-fullscreen .main-app-content-wrapper {
+    max-width: 100vw !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important; 
+    margin: 0 !important;
+    display: flex;
+    flex-direction: column;
+    position: fixed; 
+    top: 0;
+    left: 0;
+    z-index: 50; 
+  }
+
+  body.app-fullscreen .main-app-content-wrapper .window-controls-container {
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 60; 
+  }
+
+  body.app-fullscreen .main-app-content-wrapper .theme-toggle-container {
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 60;
+  }
+  
+  body.app-fullscreen .main-app-content-wrapper > .content-scroll-container {
+     padding: 2.5rem 1.5rem 1.5rem 1.5rem; /* Increased padding for safety */
+     flex-grow: 1;
+     overflow-y: auto; 
+     width: 100%;
+  }
+
+  .window-control-button::selection {
+    background-color: transparent;
+  }
+  .window-control-button *::selection {
+    background-color: transparent;
+  }
+
+  /* --- Classic Theme specific styles --- */
+  .graffiti-title {
+    font-family: var(--font-display);
+    color: var(--color-text-primary) !important;
+    font-size: 3rem; 
+    line-height: 1.1;
+    text-shadow: 
+      1px 1px 0px #0ea5e9, /* sky-500 */
+      -1px -1px 0px #38bdf8, /* sky-400 */
+      0 0 15px rgba(56, 189, 248, 0.4), /* subtle glow */
+      3px 4px 5px rgba(0,0,0,0.35); /* main shadow */
+    transform: rotate(-3deg) skewX(-3.5deg); 
+    display: inline-block; 
+    letter-spacing: -1px; 
+    margin-bottom: 0.5rem;
+    opacity: 0.98;
+    --tw-text-opacity: 1 !important;
+    transition: all 0.3s ease-in-out;
+  }
+
+  .graffiti-subtitle {
+    font-family: var(--font-display);
+    color: var(--color-text-secondary) !important;
+    font-size: 1.25rem; 
+    line-height: 1.2;
+    text-shadow:
+      0.5px 0.5px 0px #0ea5e9,
+      -0.5px -0.5px 0px #38bdf8,
+      0 0 8px rgba(56, 189, 248, 0.3),
+      1.5px 2px 3px rgba(0,0,0,0.25);
+    transform: rotate(-2.5deg);
+    display: inline-block;
+    letter-spacing: -0.5px;
+    opacity: 0.95;
+    --tw-text-opacity: 1 !important;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  @media (min-width: 768px) {
+    .graffiti-title {
+        font-size: 4.5rem;
+    }
+    .graffiti-subtitle {
+        font-size: 1.75rem;
+    }
+  }
+
+
+  .theme-modern .graffiti-title,
+  .theme-modern .graffiti-subtitle {
+    font-family: var(--font-display);
+    text-shadow: none;
+    transform: none;
+    letter-spacing: normal;
+  }
+
+  .theme-modern .graffiti-title {
+    color: var(--color-text-primary) !important;
+    font-weight: 900;
+  }
+   .theme-modern .graffiti-subtitle {
+    color: var(--color-text-secondary) !important;
+    font-weight: 400;
+  }
+
+</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="./index.tsx"></script>
+</body>
+</html>

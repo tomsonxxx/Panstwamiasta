@@ -1,0 +1,211 @@
+{
+  "A": [
+    "Adapter (do Narzędzi)",
+    "Aerograf",
+    "Agregat",
+    "Allen (klucz)",
+    "Aparat Spawalniczy",
+    "Aplikator (do Kleju, Silikonu)",
+    "Automatyczny Ołówek"
+  ],
+  "B": [
+    "Betoniarka",
+    "Bezpiecznik (narzędzie Elektryka)",
+    "Blok Szlifierski",
+    "Bor (wiertło)",
+    "Bosak",
+    "Brzeszczot",
+    "Bruzdownica"
+  ],
+  "C": [
+    "Ciągnik",
+    "Cięgło",
+    "Chwytak",
+    "Cyrkiel",
+    "Cyklina",
+    "Czekan",
+    "Czerpak",
+    "Cęgi"
+  ],
+  "D": [
+    "Dalmierz",
+    "Dmuchawa",
+    "Drabina",
+    "Dysk (do Cięcia, Szlifowania)",
+    "Dynamometr",
+    "Dziurkacz",
+    "Dłuto"
+  ],
+  "E": [
+    "Ekierka",
+    "Elektroda (spawalnicza)",
+    "Embrasure Tool (narzędzie Murarskie)",
+    "Etykieciarka"
+  ],
+  "F": [
+    "Farbownik (pędzel)",
+    "Fazownik",
+    "Filetówka (nóż)",
+    "Folia Malarska",
+    "Frezarka",
+    "Fugasownica"
+  ],
+  "G": [
+    "Gilotyna",
+    "Giętarka",
+    "Gogle (ochronne)",
+    "Głowica (narzędzia)",
+    "Graca",
+    "Gradownik",
+    "Gwintownica"
+  ],
+  "H": [
+    "Haczyk",
+    "Hak",
+    "Hamulec (w Narzędziach)",
+    "Hebel",
+    "Hol (lina)",
+    "Hydrauliczny Podnośnik"
+  ],
+  "I": [
+    "Igła (do Szycia, Specjalistyczna)",
+    "Imadło",
+    "Inflator (do Opon)",
+    "Isostat (rodzaj Przełącznika)",
+    "Izolacja (taśma Izolacyjna)"
+  ],
+  "J": [
+    "Jack (podnośnik Samochodowy)",
+    "Jig (przyrząd Ustalający)",
+    "Jointing Plane (strug Do Łączeń)",
+    "Junak (stara Polska Wiertarka)"
+  ],
+  "K": [
+    "Kątownik",
+    "Kielnia",
+    "Klucz (np. Francuski, Płaski, Nasadowy)",
+    "Kombinerki",
+    "Kompresor",
+    "Koparka",
+    "Kosa",
+    "Kosiarka",
+    "Kowadło"
+  ],
+  "L": [
+    "Laser (poziomica Laserowa)",
+    "Latarka (warsztatowa)",
+    "Lemiesz",
+    "Liniał",
+    "Lutownica",
+    "Lupa"
+  ],
+  "M": [
+    "Maczeta",
+    "Maszyna Do Szycia",
+    "Maska (ochronna)",
+    "Miarka",
+    "Mieszadło",
+    "Mikrometr",
+    "Mop",
+    "Multimetr",
+    "Młotek"
+  ],
+  "N": [
+    "Napinacz",
+    "Narzynka",
+    "Nasadka (do Klucza)",
+    "Niwelator",
+    "Nożyce",
+    "Nóż (np. Monterski, Do Tapet)"
+  ],
+  "O": [
+    "Obcinaczki (do Drutu)",
+    "Odkurzacz (przemysłowy)",
+    "Olejarka",
+    "Oscyloskop",
+    "Ostrzałka",
+    "Otwornica",
+    "Ołówek (stolarski)"
+  ],
+  "P": [
+    "Paca",
+    "Pistolet (do Kleju, Malarski, Na Gwoździe)",
+    "Piła (ręczna, Tarczowa, Szablasta)",
+    "Pompka",
+    "Poziomica",
+    "Przecinak",
+    "Przedłużacz",
+    "Punktak",
+    "Pędzel"
+  ],
+  "R": [
+    "Radiometr",
+    "Rakla",
+    "Rozpylacz (np. Do Farby)",
+    "Rozwiertak",
+    "Rylec",
+    "Rębak",
+    "Rękawice (robocze)"
+  ],
+  "S": [
+    "Sekator",
+    "Siekiera",
+    "Sito",
+    "Spachelka",
+    "Spawarka",
+    "Strug",
+    "Suwmiarka",
+    "Szczypce",
+    "Szlifierka (kątowa, Taśmowa)"
+  ],
+  "T": [
+    "Taczka",
+    "Tarcza (do Cięcia)",
+    "Termometr (techniczny)",
+    "Tester (napięcia)",
+    "Topór",
+    "Trzonek",
+    "Tyczka Miernicza",
+    "Tłok"
+  ],
+  "U": [
+    "Uchwyt (magnetyczny, Wiertarski)",
+    "Uciosarka",
+    "Uniwersalny Klucz",
+    "Urządzenie Wielofunkcyjne"
+  ],
+  "W": [
+    "Waga (techniczna)",
+    "Walec (malarski)",
+    "Wciągarka",
+    "Widły",
+    "Wiertarka",
+    "Wkrętarka",
+    "Wodomierz",
+    "Wykrywacz (metalu, Przewodów)",
+    "Wyrzynarka"
+  ],
+  "Z": [
+    "Zabierak",
+    "Zacieraczka",
+    "Zaciskarka",
+    "Zawór",
+    "Zbijak",
+    "Zestaw Kluczy",
+    "Zgarniacz",
+    "Zszywacz (tapicerski)"
+  ],
+  "Ł": [
+    "Łom",
+    "Łopata"
+  ],
+  "Ś": [
+    "Śrubokręt"
+  ],
+  "Ż": [
+    "Żabka (klucz)",
+    "Żuraw (mały Warsztatowy)",
+    "Żyletka (np. W Nożu Do Tapet)",
+    "Żłobik"
+  ]
+}

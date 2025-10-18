@@ -1,0 +1,9 @@
+
+{
+  "name": "Państwa Miasta Game duck",
+  "description": "A web-based version of the classic category game 'Państwa Miasta' (City-Country-River), where players provide answers for given categories. This version is single-player and uses AI for answer validation.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "prompt": ""
+}
