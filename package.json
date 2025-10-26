@@ -1,12 +1,33 @@
 {
-  "name": "panstwa-miasta-monorepo",
-  "version": "1.0.0",
+  "name": "panstwa-miasta-app",
   "private": true,
+  "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "start": "npm run dev --prefix server",
-    "install": "npm install --prefix server"
+    "dev": "concurrently \"npm:dev:client\" \"npm:dev:server\"",
+    "dev:client": "vite",
+    "dev:server": "npm run dev --prefix server",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "npm start --prefix server",
+    "install-all": "npm install && npm install --prefix server"
+  },
+  "dependencies": {
+    "@google/genai": "^1.3.0",
+    "framer-motion": "^12.15.0",
+    "nanoid": "5.0.7",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-hot-toast": "^2.5.2",
+    "react-router-dom": "^7.6.1",
+    "socket.io-client": "^4.7.5"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "concurrently": "^8.2.2",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.0"
   }
 }

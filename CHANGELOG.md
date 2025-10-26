@@ -6,6 +6,12 @@ Ten plik służy jako oficjalny dziennik zmian (changelog) oraz jako dokumentacj
 
 ## Historia Zmian
 
+### 26.07.2024
+- **Poprawka:** Naprawiono błąd połączenia z serwerem WebSocket (`timeout`) poprzez poprawną konfigurację projektu do pracy z Vite. Utworzono główny plik `vite.config.ts` i zaktualizowano `package.json` o skrypty do jednoczesnego uruchamiania klienta i serwera.
+- **Poprawka:** Rozwiązano problem z odtwarzaniem dźwięków w niektórych przeglądarkach (`Failed to load because no supported source was found`) przez zmianę typu MIME w danych audio z `audio/mpeg` na `audio/mp3` w `constants.ts`.
+- **Refaktoryzacja:** Sfinalizowano refaktoryzację struktury projektu opisaną w poprzednim wpisie. Usunięto zbędne pliki konfiguracyjne klienta i scalono zależności w głównym `package.json`, eliminując duplikację.
+- **Poprawka:** Usunięto niepotrzebny blok `importmap` z pliku `index.html`, ponieważ za zarządzanie zależnościami odpowiada teraz Vite.
+
 ### 25.07.2024
 - **Refaktoryzacja:** Przeprowadzono gruntowną refaktoryzację struktury projektu. Usunięto zduplikowany katalog `/client` wraz z jego zawartością, co znacząco uprościło strukturę i usunęło potencjalne źródła błędów.
 - **Aktualizacja:** Zaktualizowano skrypty w głównym pliku `package.json` oraz konfigurację serwera `server/index.js`, aby odzwierciedlały nową, spłaszczoną strukturę projektu.
