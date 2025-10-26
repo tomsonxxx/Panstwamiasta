@@ -55,7 +55,7 @@ const GoogleDriveSync: React.FC<{
 
     const handleLoad = async () => {
         setIsSyncing(true);
-        const toastId = toast.loading("Wczytywanie ustawień z chmury...");
+        const toastId = toast.loading("Wczytywanie ustawień z chmurze...");
         const loadedSettings = await loadSettingsFromDrive();
         setIsSyncing(false);
         if (loadedSettings) {
@@ -156,7 +156,12 @@ const SettingsScreen: React.FC = () => {
 
     dispatch({ type: GameActionType.UPDATE_SETTINGS, payload: currentSettings });
     
-    dispatch({ type: GameActionType.INITIALIZE_GAME, payload: { settings: currentSettings, gameMode: mode } });
+    if (mode === 'solo-offline') {
+        dispatch({ type: GameActionType.INITIALIZE_GAME, payload: { settings: currentSettings, gameMode: 'solo-offline' }});
+    } else { 
+        dispatch({ type: GameActionType.INITIALIZE_GAME, payload: { settings: currentSettings, gameMode: 'solo' } });
+        // Usunięto START_NEW_ROUND, aby zachować spójność z nowym flow przez LetterDrawingScreen
+    }
   };
 
   const getTitle = () => {

@@ -74,7 +74,7 @@ const GameSummaryScreen: React.FC = () => {
     } catch (e) {
         console.error("Failed to save high score:", e);
     }
-  }, [localHumanPlayer, gameMode, settings, navigate]);
+  }, [localHumanPlayer, gameMode, settings]);
 
   const handlePlayAgain = () => {
     if (gameMode === 'multiplayer-client') {

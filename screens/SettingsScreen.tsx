@@ -140,6 +140,14 @@ const SettingsScreen: React.FC = () => {
     });
   };
 
+  const handleSelectAll = () => {
+    setCurrentSettings(prev => ({ ...prev, selectedCategories: ALL_CATEGORIES }));
+  };
+
+  const handleDeselectAll = () => {
+    setCurrentSettings(prev => ({ ...prev, selectedCategories: [] }));
+  };
+
   const handleStartGame = () => {
     if (currentSettings.selectedCategories.length < MIN_CATEGORIES_SELECTED) {
       toast.error(`Proszę wybrać co najmniej ${MIN_CATEGORIES_SELECTED} kategorie.`);
@@ -202,8 +210,16 @@ const SettingsScreen: React.FC = () => {
         </div>
 
         <div>
-          <h3 className="text-lg font-medium text-text-primary mb-2">Wybierz Kategorie</h3>
-          <p className="text-sm text-text-secondary mb-3">Wybrano: {currentSettings.selectedCategories.length} (min. {MIN_CATEGORIES_SELECTED})</p>
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-2 gap-2">
+                <div>
+                    <h3 className="text-lg font-medium text-text-primary">Wybierz Kategorie</h3>
+                    <p className="text-sm text-text-secondary">Wybrano: {currentSettings.selectedCategories.length} (min. {MIN_CATEGORIES_SELECTED})</p>
+                </div>
+                <div className="flex gap-2">
+                    <Button onClick={handleSelectAll} size="sm" variant="ghost">Zaznacz wszystkie</Button>
+                    <Button onClick={handleDeselectAll} size="sm" variant="ghost">Odznacz wszystkie</Button>
+                </div>
+            </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-60 overflow-y-auto p-3 bg-background rounded-md border border-slate-600">
             {ALL_CATEGORIES.map(category => (
               <label key={category} className="flex items-center space-x-2 p-2 bg-surface rounded-md hover:bg-slate-600 cursor-pointer transition-colors">

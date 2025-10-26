@@ -1,4 +1,5 @@
 
+
 export type Category = string;
 
 export enum PlayerActivityState {
@@ -23,6 +24,7 @@ export interface AIValidationResponse {
   isValid: boolean;
   reason?: string;
   bonusPoints?: number;
+  bonusPointsReason?: string;
 }
 
 export enum GameActionType {
@@ -70,6 +72,7 @@ export enum GameActionType {
   CANCEL_PLAYER_VOTE = 'CANCEL_PLAYER_VOTE',
   RESOLVE_PLAYER_VOTE = 'RESOLVE_PLAYER_VOTE',
   FINALIZE_AND_RECALCULATE_SCORES = 'FINALIZE_AND_RECALCULATE_SCORES',
+  OVERRIDE_ANSWER_VALIDITY = 'OVERRIDE_ANSWER_VALIDITY',
   // New action for Google Drive client ID check
   CLIENT_ID_MISSING = 'CLIENT_ID_MISSING'
 }
@@ -93,6 +96,7 @@ export interface Answer {
   reason?: string;
   score: number;
   bonusPoints: number;
+  bonusPointsReason?: string;
   isVoteable?: boolean;
   voteOverridden?: 'valid' | 'invalid' | null;
 }

@@ -97,18 +97,22 @@ const MainMenuScreen: React.FC = () => {
 
   }, [dispatch]);
 
-  const handleSetupGame = (mode: 'solo' | 'solo-offline') => {
-    if (mode === 'solo' && !gameState.apiKeyOk) {
+  const handleSoloGame = () => {
+    if (!gameState.apiKeyOk) {
       toast.error(`Nie można rozpocząć gry solo (online): Główny klucz API (API_KEY) nie jest skonfigurowany.`, { duration: 4000 });
       return;
     }
-    if (mode === 'solo-offline' && !gameState.isKnowledgeBaseLoaded) {
+    navigate(`/settings?mode=solo`);
+  };
+
+  const handleOfflineGame = () => {
+     if (!gameState.isKnowledgeBaseLoaded) {
       const kbStatus = getKnowledgeBaseStatus();
       toast.error(kbStatus.message || "Nie można rozpocząć gry offline: Lokalna baza wiedzy nie jest załadowana. Sprawdź konsolę.", { duration: 5000 });
       return;
     }
-    navigate(`/settings?mode=${mode}`);
-  };
+    navigate('/offline-bot-config');
+  }
 
   const handleMultiplayerGame = () => {
     if (!gameState.apiKeyOk) {
@@ -169,7 +173,7 @@ const MainMenuScreen: React.FC = () => {
       >
         <motion.div variants={itemVariants}>
           <Button 
-              onClick={() => handleSetupGame('solo')} 
+              onClick={handleSoloGame} 
               size="lg" 
               fullWidth 
               disabled={mainApiKeyProblem}
@@ -180,7 +184,7 @@ const MainMenuScreen: React.FC = () => {
         </motion.div>
         <motion.div variants={itemVariants}>
           <Button 
-              onClick={() => handleSetupGame('solo-offline')} 
+              onClick={handleOfflineGame} 
               size="lg" 
               fullWidth 
               variant="secondary"

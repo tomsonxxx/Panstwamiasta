@@ -1,11 +1,9 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require("socket.io");
-const cors = require('cors');
 const path = require('path');
 
 const app = express();
-app.use(cors());
 
 const server = http.createServer(app);
 
@@ -135,7 +133,7 @@ io.on('connection', (socket) => {
 
 
 // Serwowanie plików statycznych dla produkcji
-const clientBuildPath = path.join(__dirname, '..', 'client', 'dist');
+const clientBuildPath = path.join(__dirname, '..');
 app.use(express.static(clientBuildPath));
 
 app.get('*', (req, res) => {

@@ -103,7 +103,7 @@ const gameReducer = (state: GameState, action: { type: GameActionType, payload?:
       return { ...state, playerAvatarId: action.payload };
 
     case GameActionType.INITIALIZE_GAME: {
-      const { settings, gameMode } = action.payload;
+      const { settings, gameMode, botsToCreate } = action.payload;
       const humanPlayer: Player = {
         id: nanoid(),
         name: state.playerName,
@@ -113,25 +113,11 @@ const gameReducer = (state: GameState, action: { type: GameActionType, payload?:
         isHost: gameMode === 'multiplayer-host' || gameMode === 'solo' || gameMode === 'solo-offline',
         activityState: PlayerActivityState.IDLE,
       };
-      return {
-        ...initialState,
-        settings,
-        gameMode,
-        playerName: state.playerName,
-        playerAvatarId: state.playerAvatarId,
-        players: [humanPlayer],
-        gamePhase: gameMode === 'solo-offline' ? 'offline_config' : 'letter_drawing',
-        apiKeyOk: state.apiKeyOk,
-        isKnowledgeBaseLoaded: state.isKnowledgeBaseLoaded,
-      };
-    }
-    
-    case GameActionType.START_OFFLINE_GAME_WITH_BOTS: {
-        const { botsToCreate } = action.payload as { botsToCreate: BotSetupConfig[] };
-        const humanPlayer = state.players.find(p => !p.isBot);
-        if (!humanPlayer) return state; // Should not happen
-
-        const botPlayers: Player[] = botsToCreate.map((botConfig, index) => ({
+      
+      let allPlayers = [humanPlayer];
+      
+      if (botsToCreate && botsToCreate.length > 0) {
+        const botPlayers: Player[] = botsToCreate.map((botConfig: BotSetupConfig, index: number) => ({
             id: botConfig.id,
             name: botConfig.name,
             score: 0,
@@ -140,14 +126,22 @@ const gameReducer = (state: GameState, action: { type: GameActionType, payload?:
             botDifficulty: botConfig.difficulty,
             activityState: PlayerActivityState.IDLE,
         }));
+        allPlayers = [humanPlayer, ...botPlayers];
+      }
 
-        return {
-            ...state,
-            players: [humanPlayer, ...botPlayers],
-            gamePhase: 'letter_drawing',
-        };
+      return {
+        ...initialState,
+        settings,
+        gameMode,
+        players: allPlayers,
+        playerName: state.playerName,
+        playerAvatarId: state.playerAvatarId,
+        gamePhase: 'letter_drawing', // UJEDNOLICENIE: Zawsze zaczynaj od losowania litery
+        apiKeyOk: state.apiKeyOk,
+        isKnowledgeBaseLoaded: state.isKnowledgeBaseLoaded,
+      };
     }
-
+    
     case GameActionType.SET_LETTER_DRAWING_PLAYER: {
         const { playerId, playerName } = action.payload;
         return {
@@ -171,7 +165,7 @@ const gameReducer = (state: GameState, action: { type: GameActionType, payload?:
     case GameActionType.START_NEW_ROUND: {
       const categoriesForRound = [...state.settings.selectedCategories].sort(() => 0.5 - Math.random()).slice(0, state.settings.categoriesPerRound);
       const initialAnswers = categoriesForRound.reduce((acc, category) => {
-        acc[category] = { text: '', score: 0, bonusPoints: 0 };
+        acc[category] = { text: '', score: 0, bonusPoints: 0, bonusPointsReason: '' };
         return acc;
       }, {} as RoundAnswers);
 
@@ -247,13 +241,9 @@ const gameReducer = (state: GameState, action: { type: GameActionType, payload?:
           isKnowledgeBaseLoaded: state.isKnowledgeBaseLoaded
       };
 
-    case GameActionType.REPLAY_GAME: { // For solo and multiplayer-host
-        const { gameMode } = state;
-        const nextPhase = gameMode === 'multiplayer-host' ? 'lobby' : 'letter_drawing';
-
-        return {
-            ...state,
-            gamePhase: nextPhase,
+    case GameActionType.REPLAY_GAME: {
+        const baseState = {
+             ...state,
             currentRound: 0,
             currentLetter: '',
             roundResults: [],
@@ -267,9 +257,14 @@ const gameReducer = (state: GameState, action: { type: GameActionType, payload?:
             activePlayerVote: null,
             currentRoundAnswers: {},
             allPlayerRoundAnswers: {},
-            // Reset scores and activity state for all players
             players: state.players.map(p => ({ ...p, score: 0, activityState: PlayerActivityState.IDLE })),
         };
+
+        if (state.gameMode === 'multiplayer-host') {
+            return { ...baseState, gamePhase: 'lobby' };
+        } else { // UJEDNOLICENIE: solo i solo-offline od razu do losowania
+            return { ...baseState, gamePhase: 'letter_drawing' };
+        }
     }
       
     case GameActionType.SET_ANSWER: {
@@ -408,6 +403,25 @@ const gameReducer = (state: GameState, action: { type: GameActionType, payload?:
             activePlayerVote: null,
         };
     }
+    
+    case GameActionType.OVERRIDE_ANSWER_VALIDITY: {
+        const { roundIndex, playerId, category, newIsValid } = action.payload;
+        if (roundIndex < 0 || roundIndex >= state.roundResults.length) return state;
+
+        // Create a deep copy to avoid mutation issues
+        const newRoundResults = JSON.parse(JSON.stringify(state.roundResults));
+        const roundResult = newRoundResults[roundIndex];
+        const answer = roundResult.playerAnswers[playerId]?.[category];
+
+        if (answer) {
+            const originalIsValid = answer.isValid;
+            answer.isValid = newIsValid;
+            answer.voteOverridden = originalIsValid !== newIsValid ? (newIsValid ? 'valid' : 'invalid') : null;
+            answer.reason = `Werdykt AI zmieniony przez gracza. Nowa ocena: ${newIsValid ? 'Poprawna' : 'Niepoprawna'}.`;
+        }
+
+        return { ...state, roundResults: newRoundResults };
+    }
 
 
     default:
@@ -434,6 +448,7 @@ const GameContext = createContext<{
   castPlayerVote: (vote: boolean) => void;
   cancelPlayerVote: () => void;
   finalizeAndRecalculateScores: (roundIndex: number) => void;
+  overrideAnswerValidity: (roundIndex: number, playerId: string, category: string, newIsValid: boolean) => void;
   isLoadingValidation: boolean;
 }>({
   gameState: initialState,
@@ -454,6 +469,7 @@ const GameContext = createContext<{
   castPlayerVote: () => {},
   cancelPlayerVote: () => {},
   finalizeAndRecalculateScores: () => {},
+  overrideAnswerValidity: () => {},
   isLoadingValidation: false,
 });
 
@@ -485,8 +501,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const currentCategories = Object.keys(playerAnswers[Object.keys(playerAnswers)[0]] || {});
 
     // Create a deep copy to avoid direct state mutation
-    // @google/genai-codex-fix: Dodano rzutowanie typu, aby rozwiązać błędy TypeScript związane z `JSON.parse`.
-    let finalPlayerAnswers: Record<string, RoundAnswers> = JSON.parse(JSON.stringify(playerAnswers)) as Record<string, RoundAnswers>;
+    let finalPlayerAnswers: Record<string, RoundAnswers> = JSON.parse(JSON.stringify(playerAnswers));
 
     // 1. Build a map of valid answers for each category
     const categoryAnswers: Record<Category, { playerId: string, text: string }[]> = {};
@@ -538,7 +553,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (gameState.gameMode !== 'multiplayer-host' && gameState.gameMode !== 'solo' && gameState.gameMode !== 'solo-offline') return;
 
     const currentRoundResult = gameState.roundResults[roundIndex];
-    if (!currentRoundResult || currentRoundResult.isFinalized) return;
+    if (!currentRoundResult) return;
     
     const { updatedPlayerAnswers, updatedRoundScores } = recalculateScoresForRound(currentRoundResult);
 
@@ -555,15 +570,14 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const allRoundResults = [...gameState.roundResults];
     allRoundResults[roundIndex] = updatedRoundResult;
 
-    allRoundResults.forEach(result => {
-        if(result.isFinalized || result.roundNumber === updatedRoundResult.roundNumber) {
-            Object.entries(result.scores).forEach(([playerId, score]) => {
-                if (baseScores[playerId] !== undefined) {
-                    // @google/genai-codex-fix: Zrzutowano typ 'score' na 'number', aby rozwiązać błąd kompilacji.
-                    baseScores[playerId] += score as number;
-                }
-            });
-        }
+    // Recalculate total scores from ALL finalized rounds
+    const finalizedRounds = allRoundResults.filter(r => r.isFinalized);
+    finalizedRounds.forEach(result => {
+        Object.entries(result.scores).forEach(([playerId, score]) => {
+            if (baseScores[playerId] !== undefined) {
+                baseScores[playerId] += score as number;
+            }
+        });
     });
 
     const updatedPlayers = gameState.players.map(player => ({
@@ -577,6 +591,18 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
   }, [gameState.gameMode, gameState.roundResults, gameState.players, recalculateScoresForRound]);
+  
+  const isSoloMode = gameState.gameMode === 'solo' || gameState.gameMode === 'solo-offline';
+
+  const overrideAnswerValidity = useCallback((roundIndex: number, playerId: string, category: string, newIsValid: boolean) => {
+      if (!isSoloMode) return;
+      dispatch({ 
+          type: GameActionType.OVERRIDE_ANSWER_VALIDITY, 
+          payload: { roundIndex, playerId, category, newIsValid }
+      });
+      // Recalculate scores after a short delay to ensure state update has propagated
+      setTimeout(() => finalizeAndRecalculateScores(roundIndex), 50);
+  }, [finalizeAndRecalculateScores, isSoloMode]);
 
   const sendRelayedMessage = useCallback((type: MultiplayerMessage['type'], payload?: any) => {
       const localPlayer = getLocalPlayer();
@@ -735,7 +761,6 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     dispatch({ type: GameActionType.CANCEL_PLAYER_VOTE });
                     break;
                 case 'new_host':
-                    // @google/genai-codex-fix: Replaced `toast.info` with a standard `toast` call as `info` method does not exist.
                     toast(`Nowym hostem jest ${gameStateRef.current.players.find(p=>p.id === message.payload.newHostId)?.name}`, { icon: 'ℹ️' });
                     break;
             }
@@ -753,8 +778,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         dispatch({ type: GameActionType.SET_PLAYER_ACTIVITY, payload: { playerId: bot.id, activityState: PlayerActivityState.GENERATING_ANSWERS } });
     });
 
-    // @google/genai-codex-fix: Dodano rzutowanie typu, aby rozwiązać błędy TypeScript związane z `JSON.parse`.
-    let finalPlayerAnswers: Record<string, RoundAnswers> = JSON.parse(JSON.stringify(allAnswers)) as Record<string, RoundAnswers>;
+    let finalPlayerAnswers: Record<string, RoundAnswers> = JSON.parse(JSON.stringify(allAnswers));
     let validationPromises: Promise<any>[] = [];
 
     const useOnlineValidation = gameState.gameMode !== 'solo-offline';
@@ -767,7 +791,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     await generateAnswerForBotWithMainAI(category, letter, player.botDifficulty!) :
                     getAnswerFromKB(category, letter, player.botDifficulty!);
                 
-                botAnswers[category] = { text: answerText, score: 0, bonusPoints: 0 };
+                botAnswers[category] = { text: answerText, score: 0, bonusPoints: 0, bonusPointsReason: '' };
             });
             await Promise.all(botAnswerPromises);
             finalPlayerAnswers[player.id] = botAnswers;
@@ -782,6 +806,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         finalPlayerAnswers[playerId][category].isValid = validationResult.isValid;
                         finalPlayerAnswers[playerId][category].reason = validationResult.reason;
                         finalPlayerAnswers[playerId][category].bonusPoints = validationResult.bonusPoints || 0;
+                        finalPlayerAnswers[playerId][category].bonusPointsReason = validationResult.bonusPointsReason;
                     });
                 validationPromises.push(promise);
             } else {
@@ -952,6 +977,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       castPlayerVote,
       cancelPlayerVote,
       finalizeAndRecalculateScores,
+      overrideAnswerValidity,
     }}>
       {children}
     </GameContext.Provider>

@@ -9,6 +9,7 @@ import { AVATAR_IDS } from '../constants';
 import VictoryConfetti from '../components/VictoryConfetti';
 import LoadingSpinner from '../components/LoadingSpinner';
 import PlayerVoteModal from '../components/PlayerVoteModal';
+import toast from 'react-hot-toast';
 
 const getPointsClass = (score: number) => {
     if (score >= 15) return 'text-green-400';
@@ -54,12 +55,12 @@ const PlayerAnswerCard: React.FC<{
 
 const RoundResultsScreen: React.FC = () => {
   const navigate = useNavigate();
-  const { gameState, dispatch, finalizeAndRecalculateScores, initiatePlayerVote } = useGame();
+  const { gameState, dispatch, finalizeAndRecalculateScores, initiatePlayerVote, overrideAnswerValidity } = useGame();
   const { players, currentRound, settings, roundResults, gamePhase, gameMode, playerName, activePlayerVote } = gameState;
-  const [openCategory, setOpenCategory] = useState<string | null>(null);
 
   const localPlayer = players.find(p => p.name === playerName && !p.isBot);
   const isHostOrSolo = gameMode === 'multiplayer-host' || gameMode === 'solo' || gameMode === 'solo-offline';
+  const isSoloMode = gameMode === 'solo' || gameMode === 'solo-offline';
 
   const lastResult = roundResults.length > 0 ? roundResults[roundResults.length - 1] : null;
 
@@ -72,10 +73,7 @@ const RoundResultsScreen: React.FC = () => {
   }, [isHostOrSolo, lastResult, gamePhase, gameState.isLoadingValidation, finalizeAndRecalculateScores, roundResults.length]);
   
   if (gamePhase !== 'results') {
-    if (gamePhase === 'summary') navigate('/summary');
-    else if (gamePhase === 'playing') navigate('/game');
-    else navigate('/');
-    return null;
+    return <LoadingSpinner text="Przygotowywanie następnej rundy..." />;
   }
 
   if (!lastResult) {
@@ -95,90 +93,152 @@ const RoundResultsScreen: React.FC = () => {
         }
     }
   };
+  
+  const handleInitiateSoloVote = (playerId: string, category: string) => {
+    const answer = lastResult?.playerAnswers[playerId]?.[category];
+    if (!answer || !isSoloMode) return;
+
+    toast((t) => (
+      <div className="flex flex-col items-center gap-3 p-2 text-text-primary">
+        <p className="text-center">Jak oceniasz odpowiedź <span className="font-bold text-secondary">"{answer.text}"</span> w kategorii <span className="font-bold text-primary">{category}</span>?</p>
+        <p className="text-xs italic text-slate-400 text-center">AI: {answer.reason}</p>
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              const roundIndex = roundResults.length - 1;
+              overrideAnswerValidity(roundIndex, playerId, category, true);
+              toast.dismiss(t.id);
+            }}
+          >
+            Poprawna
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => {
+              const roundIndex = roundResults.length - 1;
+              overrideAnswerValidity(roundIndex, playerId, category, false);
+              toast.dismiss(t.id);
+            }}
+          >
+            Niepoprawna
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => toast.dismiss(t.id)}>
+            Anuluj
+          </Button>
+        </div>
+      </div>
+    ), { duration: 15000, id: `solo-vote-${playerId}-${category}` });
+  };
+
 
   const isLastRound = currentRound >= settings.numRounds;
 
-  const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+  const sortedPlayers = [...players].sort((a, b) => {
+    if (a.id === localPlayer?.id) return -1;
+    if (b.id === localPlayer?.id) return 1;
+    if (a.isBot && !b.isBot) return 1;
+    if (!a.isBot && b.isBot) return -1;
+    return a.name.localeCompare(b.name);
+  });
   
   const roundWinner = [...players].sort((a,b) => (lastResult.scores[b.id] || 0) - (lastResult.scores[a.id] || 0))[0];
   const playerWonRound = localPlayer && roundWinner?.id === localPlayer.id && (lastResult.scores[localPlayer.id] || 0) > 0;
 
-  const canInitiateVote = isHostOrSolo && lastResult.isFinalized && !activePlayerVote;
-
+  const canInitiateMultiplayerVote = isHostOrSolo && !isSoloMode && lastResult.isFinalized && !activePlayerVote;
 
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
-      className="max-w-4xl mx-auto"
+      className="max-w-full mx-auto"
     >
       {playerWonRound && <VictoryConfetti />}
       <PlayerVoteModal />
       <h1 className="text-3xl font-bold mb-2 text-center text-primary">Wyniki Rundy {lastResult.roundNumber}</h1>
       <p className="text-center text-5xl font-bold text-secondary mb-6">Litera: {lastResult.letter}</p>
       
-      <div className="space-y-3">
-        {gameState.currentRoundCategories.map(category => {
-          const isCategoryOpen = openCategory === category;
-          return (
-            <div key={category} className="bg-surface p-3 rounded-lg shadow-md">
-                <h3 
-                  className="font-bold text-lg text-text-primary mb-2 cursor-pointer flex justify-between items-center"
-                  onClick={() => setOpenCategory(isCategoryOpen ? null : category)}
-                >
-                  {category}
-                  <motion.span animate={{ rotate: isCategoryOpen ? 180 : 0 }}>▼</motion.span>
-                </h3>
-                <AnimatePresence>
-                {isCategoryOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2">
-                        {players.map(player => (
-                            <PlayerAnswerCard 
-                                key={player.id} 
-                                player={player} 
-                                answer={lastResult.playerAnswers[player.id]?.[category]}
-                                onInitiateVote={() => initiatePlayerVote(player.id, category)}
-                                canVote={
-                                    canInitiateVote && 
-                                    !player.isBot && 
-                                    player.id !== localPlayer?.id
-                                }
-                            />
+        <div className="overflow-x-auto bg-surface p-1 sm:p-4 rounded-lg shadow-md">
+            <table className="min-w-full text-sm text-left border-separate border-spacing-0">
+                <thead className="bg-background/50">
+                    <tr>
+                        <th className="p-2 sticky left-0 bg-background z-10 font-semibold text-text-primary">Kategoria</th>
+                        {sortedPlayers.map(player => (
+                            <th key={player.id} className="p-2 text-center whitespace-nowrap">
+                                <div className="flex flex-col items-center gap-1">
+                                    <PlayerAvatar avatarId={player.avatarId} activityState={PlayerActivityState.IDLE} size={32} isBot={player.isBot} />
+                                    <span className="font-semibold text-text-primary text-xs truncate max-w-24">{player.name}</span>
+                                </div>
+                            </th>
                         ))}
-                    </div>
-                  </motion.div>
-                )}
-                </AnimatePresence>
-            </div>
-          )
-        })}
-        <div className="bg-background p-3 rounded-lg shadow-lg mt-4">
-             <h3 className="font-bold text-lg text-text-primary mb-2">Suma Punktów w Rundzie</h3>
-             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                 {players.map(player => (
-                     <div key={player.id} className="flex flex-col items-center p-2 bg-surface rounded-md">
-                         <span className="text-sm text-text-secondary truncate">{player.name}</span>
-                         <span className={`font-bold text-2xl ${lastResult.isFinalized ? 'text-secondary' : 'text-text-secondary animate-pulse'}`}>
-                           {lastResult.isFinalized ? (lastResult.scores[player.id] || 0) : '?'}
-                         </span>
-                     </div>
-                 ))}
-             </div>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-600">
+                    {gameState.currentRoundCategories.map(category => (
+                        <tr key={category}>
+                            <td className="p-2 font-bold text-text-primary sticky left-0 bg-surface z-10 align-top">{category}</td>
+                            {sortedPlayers.map(player => {
+                                const answer = lastResult.playerAnswers[player.id]?.[category];
+                                const totalScore = (answer?.score || 0) + (answer?.bonusPoints || 0);
+                                const canVoteOnThis = (isSoloMode && lastResult.isFinalized && player.id === localPlayer?.id) || (canInitiateMultiplayerVote && !player.isBot && player.id !== localPlayer?.id);
+
+                                return (
+                                    <td key={`${player.id}-${category}`} className={`p-2 align-top border-t border-slate-600 ${answer?.isValid ? 'bg-green-900/20' : (answer?.text ? 'bg-red-900/20' : 'bg-transparent')}`}>
+                                        {answer && (
+                                            <div>
+                                                <div className="flex justify-between items-start">
+                                                    <p className="font-semibold text-base text-text-primary break-words pr-2">{answer.text || "-"}</p>
+                                                    <p className={`font-bold text-lg whitespace-nowrap ${getPointsClass(totalScore)}`}>
+                                                        {lastResult.isFinalized ? totalScore : '?'}
+                                                    </p>
+                                                </div>
+                                                {answer.voteOverridden && (
+                                                    <span className={`text-xs italic ${answer.voteOverridden === 'valid' ? 'text-green-400' : 'text-red-400'}`} title="Werdykt zmieniony przez gracza">
+                                                        {answer.voteOverridden === 'valid' ? '✓ Ocena gracza' : '✗ Ocena gracza'}
+                                                    </span>
+                                                )}
+                                                {answer.bonusPoints > 0 && answer.bonusPointsReason && (
+                                                    <p className="text-xs text-amber-400 italic" title="Uzasadnienie punktów bonusowych">+ {answer.bonusPointsReason}</p>
+                                                )}
+                                                {lastResult.isFinalized && !answer.isValid && answer.reason && (
+                                                    <p className="text-xs text-red-300/80 italic mt-1">{answer.reason}</p>
+                                                )}
+
+                                                {canVoteOnThis && (
+                                                    <button 
+                                                        onClick={() => isSoloMode ? handleInitiateSoloVote(player.id, category) : initiatePlayerVote(player.id, category)} 
+                                                        title="Podważ ocenę odpowiedzi" 
+                                                        className="mt-1 text-xs text-sky-400 hover:text-sky-300"
+                                                    >
+                                                        Podważ
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+                                    </td>
+                                )
+                            })}
+                        </tr>
+                    ))}
+                    <tr className="bg-background/50 font-bold">
+                        <td className="p-2 sticky left-0 bg-background z-10">Suma w Rundzie</td>
+                        {sortedPlayers.map(player => (
+                            <td key={player.id} className="p-2 text-center text-xl text-secondary">
+                               {lastResult.isFinalized ? (lastResult.scores[player.id] || 0) : '?'}
+                            </td>
+                        ))}
+                    </tr>
+                </tbody>
+            </table>
         </div>
-      </div>
       
        <div className="mt-6">
             <h3 className="text-lg font-semibold mb-2 text-center text-text-primary">Punktacja Ogólna</h3>
             <div className="flex flex-wrap justify-center gap-4">
-                {sortedPlayers.map(player => (
+                {[...players].sort((a, b) => b.score - a.score).map(player => (
                     <div key={player.id} className="flex items-center space-x-2 p-2 bg-surface rounded-lg">
                         <PlayerAvatar avatarId={player.avatarId || AVATAR_IDS[0]} activityState={PlayerActivityState.IDLE} size={32} isBot={player.isBot} />
                         <div>

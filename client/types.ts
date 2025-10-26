@@ -99,7 +99,7 @@ export interface Answer {
   voteOverridden?: 'valid' | 'invalid' | null;
 }
 
-export type RoundAnswers = Record<string, Answer>;
+export type RoundAnswers = Record<Category, Answer>;
 
 export interface Player {
   id: string;

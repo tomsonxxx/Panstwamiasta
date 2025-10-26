@@ -48,10 +48,86 @@ const GamePlayScreen: React.FC = () => {
   const { gameState, dispatch, isLoadingValidation, validateAllAnswers, setPlayerActivity, initiateCountdown, submitAnswersAsClient } = useGame();
   const { settings, currentRound, currentLetter, currentRoundCategories, currentRoundAnswers, allPlayerRoundAnswers, isRoundActive, gameMode, playerName, players, isCountdownActive, countdownSeconds, gamePhase } = gameState;
   
+  const [listeningForCategory, setListeningForCategory] = useState<string | null>(null);
+  const recognitionRef = useRef<any>(null); // SpeechRecognition instance
+
   const localPlayer = players.find(p => p.name === playerName && !p.isBot); 
   
   const countdownIntervalRef = useRef<number | null>(null);
   const hasCountdownSoundPlayedRef = useRef(false); 
+
+  // Initialize SpeechRecognition once on component mount
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      // Toast will be shown only once if a user tries to use the feature
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'pl-PL';
+    recognition.continuous = false; // Stop after first final result
+    recognition.interimResults = true; // Show results as they come
+
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((result: any) => result[0])
+        .map((result) => result.transcript)
+        .join('');
+        
+      // Use a local variable from the closure in case state hasn't updated yet
+      const currentCategory = (recognition as any)._currentCategory;
+      if (currentCategory) {
+        handleInputChange(currentCategory, transcript);
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Błąd rozpoznawania mowy:', event.error);
+      if (event.error === 'not-allowed') {
+        toast.error('Odmówiono dostępu do mikrofonu.');
+      } else if (event.error === 'no-speech') {
+        // This is not a critical error, just timeout.
+      }
+      stopListening();
+    };
+
+    recognition.onend = () => {
+      // Clean up state regardless of how recognition ended
+      setListeningForCategory(null);
+    };
+
+    recognitionRef.current = recognition;
+  }, []); // Empty dependency array ensures this runs only once
+
+  const startListening = (category: string) => {
+    if (!recognitionRef.current) {
+        toast.error("Twoja przeglądarka nie wspiera rozpoznawania mowy.", { id: 'speech-unsupported' });
+        return;
+    }
+    if (listeningForCategory) {
+        // Already listening, maybe stop the current one first?
+        recognitionRef.current.stop();
+    }
+    
+    setListeningForCategory(category);
+    // Attach current category to recognition instance for access in onresult
+    (recognitionRef.current as any)._currentCategory = category; 
+    try {
+        recognitionRef.current.start();
+    } catch (e) {
+        console.error("Błąd przy starcie rozpoznawania mowy (może już działa?):", e);
+        setListeningForCategory(null);
+    }
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current && listeningForCategory) {
+      recognitionRef.current.stop();
+      setListeningForCategory(null);
+    }
+  };
+
 
   const forceEndRoundByCountdown = useCallback(() => {
     if (localPlayer) setPlayerActivity(localPlayer.id, PlayerActivityState.SUBMITTED);
@@ -227,18 +303,31 @@ const GamePlayScreen: React.FC = () => {
       
       {localPlayer && ( 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-8">
-            {currentRoundCategories.map(category => (
-              <InputField
-                key={category}
-                label={category}
-                value={currentRoundAnswers[category]?.text || ''}
-                onChange={(e) => handleInputChange(category, e.target.value)}
-                onFocus={() => handleInputFocus(category)}
-                onBlur={handleInputBlur}
-                placeholder={`Odpowiedź na ${currentLetter}...`}
-                disabled={inputsDisabled}
-              />
-            ))}
+            {currentRoundCategories.map(category => {
+              const isListening = listeningForCategory === category;
+              return (
+              <div key={category} className="flex items-center gap-2">
+                <InputField
+                  label={category}
+                  value={currentRoundAnswers[category]?.text || ''}
+                  onChange={(e) => handleInputChange(category, e.target.value)}
+                  onFocus={() => handleInputFocus(category)}
+                  onBlur={handleInputBlur}
+                  placeholder={`Odpowiedź na ${currentLetter}...`}
+                  disabled={inputsDisabled || !!listeningForCategory}
+                />
+                <button
+                  onClick={() => isListening ? stopListening() : startListening(category)}
+                  disabled={inputsDisabled}
+                  className={`mt-6 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-surface hover:bg-slate-600 text-text-secondary'}`}
+                  aria-label={isListening ? 'Zatrzymaj nagrywanie' : 'Nagraj odpowiedź głosowo'}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line>
+                    </svg>
+                </button>
+              </div>
+            )})}
           </div>
       )}
       {!localPlayer && gameMode !== 'solo' && (

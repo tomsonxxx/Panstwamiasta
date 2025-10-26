@@ -1,11 +1,7 @@
-
-
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
 import { useGame } from '../contexts/GameContext';
-// @google/genai-codex-fix: Import `PlayerActivityState` to use its enum members.
 import { GameActionType, BotDifficulty, BotSetupConfig, PlayerActivityState } from '../types';
 import { BOT_DIFFICULTY_LABELS, MAX_PLAYERS_INCLUDING_BOTS, AVATAR_IDS, BOT_NAME_PREFIX } from '../constants';
 import PlayerAvatar from '../components/PlayerAvatar';
@@ -24,16 +20,11 @@ const OfflineBotConfigScreen: React.FC = () => {
 
 
   useEffect(() => {
-    if (gameState.gamePhase !== 'offline_config') {
-      if (gameState.gamePhase === 'letter_drawing') navigate('/draw-letter');
-      else if (gameState.gamePhase === 'playing') navigate('/game');
-      else if (gameState.gamePhase === 'ended') navigate('/');
-    }
     // Add one bot by default if KB is loaded and no bots are configured yet
     if (configuredBots.length === 0 && MAX_BOTS_ALLOWED > 0 && gameState.isKnowledgeBaseLoaded) {
         handleAddBotToList(BotDifficulty.MEDIUM); 
     }
-  }, [gameState.gamePhase, navigate, gameState.isKnowledgeBaseLoaded, configuredBots.length]);
+  }, [gameState.isKnowledgeBaseLoaded]);
 
 
   const handleAddBotToList = (defaultDifficulty: BotDifficulty = BotDifficulty.MEDIUM) => {
@@ -80,11 +71,15 @@ const OfflineBotConfigScreen: React.FC = () => {
         toast.error(kbStatus.message || "Lokalna baza wiedzy nie jest załadowana. Nie można rozpocząć gry.", { duration: 4000});
         return;
     }
+    // UJEDNOLICENIE: Użyj INITIALIZE_GAME z dodatkowymi danymi o botach
     dispatch({
-      type: GameActionType.START_OFFLINE_GAME_WITH_BOTS,
-      payload: { botsToCreate: configuredBots },
+      type: GameActionType.INITIALIZE_GAME,
+      payload: { 
+        settings: gameState.settings, // Użyj domyślnych lub wcześniej skonfigurowanych ustawień
+        gameMode: 'solo-offline',
+        botsToCreate: configuredBots 
+      },
     });
-    dispatch({ type: GameActionType.START_NEW_ROUND });
   };
 
   return (
@@ -105,7 +100,6 @@ const OfflineBotConfigScreen: React.FC = () => {
             <div className="flex items-center space-x-3">
               <PlayerAvatar 
                 avatarId={AVATAR_IDS[(index + 1) % AVATAR_IDS.length]} // +1 to avoid human player's avatar index if they are 0
-                // @google/genai-codex-fix: Use `PlayerActivityState.IDLE` enum member instead of string literal.
                 activityState={PlayerActivityState.IDLE} 
                 size={40} 
                 isBot={true} 

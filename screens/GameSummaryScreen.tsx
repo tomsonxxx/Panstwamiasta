@@ -74,17 +74,13 @@ const GameSummaryScreen: React.FC = () => {
     } catch (e) {
         console.error("Failed to save high score:", e);
     }
-  }, []);
+  }, [localHumanPlayer, gameMode, settings]);
 
   const handlePlayAgain = () => {
     if (gameMode === 'multiplayer-client') {
       dispatch({ type: GameActionType.RESET_GAME }); 
       navigate('/multiplayer');
-    } else if (gameMode === 'solo-offline') {
-      // Dla tego trybu, ponowna inicjalizacja jest poprawna, aby wrócić do konfiguracji botów
-      dispatch({ type: GameActionType.INITIALIZE_GAME, payload: { settings: gameState.settings, gameMode: gameMode } });
-    } else { // 'solo' and 'multiplayer-host'
-      // Użyj nowej, poprawnej akcji do restartu gry
+    } else { // 'solo', 'solo-offline', and 'multiplayer-host'
       dispatch({ type: GameActionType.REPLAY_GAME });
     }
   };
@@ -93,8 +89,6 @@ const GameSummaryScreen: React.FC = () => {
     dispatch({ type: GameActionType.RESET_GAME }); 
     navigate('/'); 
   };
-  
-  const isMultiplayerOrOffline = gameMode === 'multiplayer-host' || gameMode === 'multiplayer-client' || gameMode === 'solo-offline';
   
   const allPlayerScoresSorted: Player[] = [...players].sort((a, b) => b.score - a.score);
   const winnerScore = allPlayerScoresSorted.length > 0 ? allPlayerScoresSorted[0].score : 0;
@@ -106,6 +100,7 @@ const GameSummaryScreen: React.FC = () => {
   const getPlayAgainButtonText = () => {
     if (gameMode === 'multiplayer-client') return "Dołącz do Nowej Gry";
     if (gameMode === 'multiplayer-host') return "Nowa Gra (Poczekalnia)";
+    if (gameMode === 'solo-offline') return "Zagraj Ponownie (Konfiguracja Botów)";
     return "Zagraj Ponownie";
   }
 
@@ -117,7 +112,7 @@ const GameSummaryScreen: React.FC = () => {
       className="text-center relative"
     >
       <AnimatePresence>
-        {winners.length > 0 && <VictoryConfetti />}
+        {winners.some(w => w.id === localHumanPlayer?.id) && <VictoryConfetti />}
       </AnimatePresence>
 
       <h1 className="text-4xl md:text-5xl font-bold mb-4 text-primary">Koniec Gry!</h1>

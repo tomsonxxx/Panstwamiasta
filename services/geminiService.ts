@@ -1,5 +1,6 @@
 
 
+
 import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
 import { AIValidationResponse, BotDifficulty } from "../types";
 
@@ -110,7 +111,7 @@ Zasady (musisz ich przestrzegać):
 8. Odpowiedzi jednoliterowe są niepoprawne, chyba że stanowią uznany skrót lub akronim pasujący do kategorii (rzadkie).
 9. **Specjalna zasada dla kategorii "Miasto":** Odpowiedź jest poprawna tylko wtedy, gdy miejscowość ma udokumentowaną populację powyżej 1000 mieszkańców według oficjalnych, aktualnych danych. Zweryfikuj to kryterium populacji. Jeśli nie możesz potwierdzić populacji lub jest ona poniżej 1000, odpowiedź jest niepoprawna.
 10. **Specjalna zasada dla kategorii "Środki Transportu":** Interpretuj odpowiedzi bardzo szeroko. Akceptowalne są również odpowiedzi żartobliwe, fantastyczne lub nietypowe (np. "latający dywan", "miotła czarownicy", "papamobile", "krowa jako środek transportu"), o ile można je uznać za jakikolwiek środek przemieszczania się lub transportu, nawet w kontekście fikcyjnym lub humorystycznym. Bądź bardzo liberalny i kreatywny w ocenie tej kategorii. Nie odrzucaj odpowiedzi tylko dlatego, że jest nietypowa.
-11. **Punkty Bonusowe za Kreatywność:** Niezależnie od poprawności merytorycznej, oceń odpowiedź pod kątem jej kreatywności, humoru lub "inteligentnego idiotyzmu". Jeśli odpowiedź jest wyjątkowo zabawna, zaskakująca lub twórczo absurdalna, przyznaj jej punkty bonusowe od 1 do 3. Jeśli nie jest specjalnie kreatywna, przyznaj 0. Umieść tę wartość w nowym polu JSON \`bonusPoints\`. Odpowiedzi poprawne merytorycznie również mogą dostać punkty bonusowe.
+11. **Punkty Bonusowe i Uzasadnienie:** Niezależnie od poprawności, oceń odpowiedź pod kątem jej kreatywności, humoru lub "inteligentnego idiotyzmu". Jeśli odpowiedź jest wyjątkowo zabawna, zaskakująca lub twórczo absurdalna, przyznaj punkty bonusowe od 1 do 3 w polu \`bonusPoints\`. Jeśli przyznasz punkty bonusowe (wartość > 0), **MUSISZ** podać krótkie, dowcipne uzasadnienie w nowym polu JSON \`bonusPointsReason\` (np. "Za pomysłowość!", "Za absurdalny humor."). Jeśli nie przyznajesz punktów bonusowych, pole \`bonusPointsReason\` powinno być pominięte lub puste.
 
 Uzasadnienie ("reason") MUSI być po polsku.`;
 
@@ -134,9 +135,13 @@ Uzasadnienie ("reason") MUSI być po polsku.`;
                     bonusPoints: { 
                         type: Type.INTEGER,
                         description: "Punkty bonusowe (0-3) za kreatywność."
+                    },
+                    bonusPointsReason: {
+                        type: Type.STRING,
+                        description: "Krótkie, dowcipne uzasadnienie przyznania punktów bonusowych, jeśli bonusPoints > 0."
                     }
                 },
-                required: ["isValid"]
+                required: ["isValid", "reason", "bonusPoints"]
             },
             temperature: 0.1,
         }
