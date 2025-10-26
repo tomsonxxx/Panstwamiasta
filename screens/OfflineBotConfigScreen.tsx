@@ -20,11 +20,16 @@ const OfflineBotConfigScreen: React.FC = () => {
 
 
   useEffect(() => {
+    if (gameState.gamePhase !== 'offline_config') {
+      if (gameState.gamePhase === 'letter_drawing') navigate('/draw-letter');
+      else if (gameState.gamePhase === 'playing') navigate('/game');
+      else if (gameState.gamePhase === 'ended') navigate('/');
+    }
     // Add one bot by default if KB is loaded and no bots are configured yet
     if (configuredBots.length === 0 && MAX_BOTS_ALLOWED > 0 && gameState.isKnowledgeBaseLoaded) {
         handleAddBotToList(BotDifficulty.MEDIUM); 
     }
-  }, [gameState.isKnowledgeBaseLoaded]);
+  }, [gameState.gamePhase, navigate, gameState.isKnowledgeBaseLoaded, configuredBots.length]);
 
 
   const handleAddBotToList = (defaultDifficulty: BotDifficulty = BotDifficulty.MEDIUM) => {
@@ -71,11 +76,11 @@ const OfflineBotConfigScreen: React.FC = () => {
         toast.error(kbStatus.message || "Lokalna baza wiedzy nie jest załadowana. Nie można rozpocząć gry.", { duration: 4000});
         return;
     }
-    // UJEDNOLICENIE: Użyj INITIALIZE_GAME z dodatkowymi danymi o botach
+    // Używamy ujednoliconej akcji INITIALIZE_GAME
     dispatch({
       type: GameActionType.INITIALIZE_GAME,
       payload: { 
-        settings: gameState.settings, // Użyj domyślnych lub wcześniej skonfigurowanych ustawień
+        settings: gameState.settings, 
         gameMode: 'solo-offline',
         botsToCreate: configuredBots 
       },
@@ -104,7 +109,7 @@ const OfflineBotConfigScreen: React.FC = () => {
                 size={40} 
                 isBot={true} 
               />
-              <span className="text-text-primary font-medium">{bot.name}</span>
+              <span className="text-text-primary font-medium">{bot.name</span>
             </div>
             <div className="flex items-center space-x-2">
               <select

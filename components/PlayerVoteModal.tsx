@@ -1,6 +1,8 @@
+
 import React from 'react';
 // @google/genai-codex-fix: Import `Variants` type from framer-motion.
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+// Fix: Use a type-only import for Variants to resolve module declaration conflicts.
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import Button from './Button';
 import { useGame } from '../contexts/GameContext';
 import PlayerAvatar from './PlayerAvatar';

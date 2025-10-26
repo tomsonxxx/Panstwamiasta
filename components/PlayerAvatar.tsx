@@ -1,6 +1,8 @@
+
 import React from 'react';
 // @google/genai-codex-fix: Import `Variants` and `TargetAndTransition` types from framer-motion.
-import { motion, Variants, TargetAndTransition } from 'framer-motion';
+// Fix: Use type-only imports to resolve module declaration conflicts.
+import { motion, type Variants, type TargetAndTransition } from 'framer-motion';
 import { PlayerActivityState } from '../types';
 
 interface PlayerAvatarProps {
@@ -100,7 +102,8 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ avatarId, activityState, si
                   stroke={colors.detail} 
                   strokeWidth="2" 
                   strokeLinecap="round"
-                  style={{ originX: '0px', originY: '0px' }}
+                  // Fix: `originX` is not a valid style property. Use `transformOrigin` instead.
+                  style={{ transformOrigin: '0px 0px' }}
                   animate={{ rotate: 360 }}
                   transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
               />

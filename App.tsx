@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import MainMenuScreen from './screens/MainMenuScreen';
 import SettingsScreen from './screens/SettingsScreen';
@@ -17,8 +18,31 @@ import { Toaster } from 'react-hot-toast';
 import { useGame } from './contexts/GameContext';
 import { useTheme } from './contexts/ThemeContext';
 // @google/genai-codex-fix: Import Transition type from framer-motion.
-import { motion, AnimatePresence, Transition } from 'framer-motion';
+// Fix: Use a type-only import for Transition to resolve module declaration conflicts.
+import { motion, AnimatePresence, type Transition } from 'framer-motion';
 import ThemeToggle from './components/ThemeToggle';
+
+// Definiuje "głębokość" każdej trasy, aby określić kierunek nawigacji
+const routeDepth: Record<string, number> = {
+  '/': 0,
+  '/settings': 1,
+  '/offline-bot-config': 1,
+  '/multiplayer': 1,
+  '/high-scores': 1,
+  '/lobby/': 2, // Używa `startsWith` do dopasowania
+  '/draw-letter': 3,
+  '/game': 4,
+  '/round-results': 5,
+  '/summary': 6,
+};
+
+const getPathDepth = (path: string): number => {
+  if (path.startsWith('/lobby/')) {
+    return routeDepth['/lobby/'];
+  }
+  return routeDepth[path] ?? -1; // Zwraca -1 dla nieznanych ścieżek
+};
+
 
 const App: React.FC = () => {
   const [isFullScreen, setIsFullScreen] = useState(!!document.fullscreenElement);
@@ -26,6 +50,9 @@ const App: React.FC = () => {
   const navigate = useNavigate();
   const { gameState } = useGame();
   const { theme } = useTheme();
+  
+  const [direction, setDirection] = useState(0);
+  const prevPathRef = useRef(location.pathname);
 
   useEffect(() => {
     document.documentElement.classList.remove('theme-classic', 'theme-modern');
@@ -48,6 +75,24 @@ const App: React.FC = () => {
       document.removeEventListener('fullscreenchange', handleFullScreenChange);
     };
   }, []);
+  
+  useEffect(() => {
+    // Oblicz kierunek nawigacji
+    const prevDepth = getPathDepth(prevPathRef.current);
+    const currentDepth = getPathDepth(location.pathname);
+
+    if (currentDepth > prevDepth) {
+      setDirection(1); // Do przodu
+    } else if (currentDepth < prevDepth) {
+      setDirection(-1); // Do tyłu
+    } else {
+      setDirection(0); // Ten sam poziom lub przeładowanie
+    }
+
+    // Zaktualizuj poprzednią ścieżkę dla następnej nawigacji
+    prevPathRef.current = location.pathname;
+  }, [location.pathname]);
+
 
   // Effect to handle navigation based on gamePhase
   useEffect(() => {
@@ -113,16 +158,27 @@ const App: React.FC = () => {
     : "bg-transparent shadow-none rounded-none border-none";
     
   const pageVariants = {
-    initial: { opacity: 0, y: 15 },
-    in: { opacity: 1, y: 0 },
-    out: { opacity: 0, y: -15 },
+    initial: (direction: number) => ({
+      opacity: 0,
+      x: direction > 0 ? '20%' : direction < 0 ? '-20%' : '0%',
+      scale: 0.98,
+    }),
+    in: {
+      opacity: 1,
+      x: '0%',
+      scale: 1,
+    },
+    out: (direction: number) => ({
+      opacity: 0,
+      x: direction > 0 ? '-20%' : direction < 0 ? '20%' : '0%',
+      scale: 0.98,
+    }),
   };
 
-  // @google/genai-codex-fix: Explicitly type `pageTransition` to resolve type inference issue.
   const pageTransition: Transition = {
-    type: "tween",
-    ease: "easeInOut",
-    duration: 0.4,
+    type: "spring",
+    stiffness: 260,
+    damping: 25,
   };
 
   return (
@@ -130,7 +186,7 @@ const App: React.FC = () => {
       {theme === 'classic' && <ClassicBackground />}
       {theme === 'modern' && <ModernBackground />}
       
-      <div className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 selection:bg-primary selection:text-white relative z-10">
+      <div className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 selection:bg-primary selection:text-white relative z-10 overflow-hidden">
         <Toaster position="top-center" reverseOrder={false} toastOptions={{
           style: {
             background: 'var(--color-surface)',
@@ -147,9 +203,10 @@ const App: React.FC = () => {
             onToggleFullScreen={toggleFullScreen}
           />
           <div className="content-scroll-container p-6 md:p-10">
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="wait" custom={direction}>
               <motion.div
                 key={location.pathname}
+                custom={direction}
                 initial="initial"
                 animate="in"
                 exit="out"

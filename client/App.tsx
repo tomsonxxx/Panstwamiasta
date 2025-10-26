@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import MainMenuScreen from './screens/MainMenuScreen';
@@ -16,7 +17,8 @@ import ModernBackground from './components/ModernBackground';
 import { Toaster } from 'react-hot-toast';
 import { useGame } from './contexts/GameContext';
 import { useTheme } from './contexts/ThemeContext';
-import { motion, AnimatePresence, Transition } from 'framer-motion';
+// Fix: Use a type-only import for Transition to resolve module declaration conflicts.
+import { motion, AnimatePresence, type Transition } from 'framer-motion';
 import ThemeToggle from './components/ThemeToggle';
 
 const App: React.FC = () => {

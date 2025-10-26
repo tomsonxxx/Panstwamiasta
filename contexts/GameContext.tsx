@@ -136,7 +136,7 @@ const gameReducer = (state: GameState, action: { type: GameActionType, payload?:
         players: allPlayers,
         playerName: state.playerName,
         playerAvatarId: state.playerAvatarId,
-        gamePhase: 'letter_drawing', // UJEDNOLICENIE: Zawsze zaczynaj od losowania litery
+        gamePhase: gameMode === 'solo-offline' && !botsToCreate ? 'offline_config' : 'letter_drawing',
         apiKeyOk: state.apiKeyOk,
         isKnowledgeBaseLoaded: state.isKnowledgeBaseLoaded,
       };
@@ -242,6 +242,10 @@ const gameReducer = (state: GameState, action: { type: GameActionType, payload?:
       };
 
     case GameActionType.REPLAY_GAME: {
+        const nextPhase: GamePhase = state.gameMode === 'multiplayer-host'
+            ? 'lobby'
+            : (state.gameMode === 'solo-offline' ? 'offline_config' : 'letter_drawing');
+
         const baseState = {
              ...state,
             currentRound: 0,
@@ -260,11 +264,20 @@ const gameReducer = (state: GameState, action: { type: GameActionType, payload?:
             players: state.players.map(p => ({ ...p, score: 0, activityState: PlayerActivityState.IDLE })),
         };
 
-        if (state.gameMode === 'multiplayer-host') {
-            return { ...baseState, gamePhase: 'lobby' };
-        } else { // UJEDNOLICENIE: solo i solo-offline od razu do losowania
-            return { ...baseState, gamePhase: 'letter_drawing' };
+        if (state.gameMode === 'solo-offline') {
+            return {
+                ...initialState,
+                gameMode: 'solo-offline',
+                gamePhase: 'offline_config',
+                players: [state.players.find(p => !p.isBot)!],
+                playerName: state.playerName,
+                playerAvatarId: state.playerAvatarId,
+                apiKeyOk: state.apiKeyOk,
+                isKnowledgeBaseLoaded: state.isKnowledgeBaseLoaded
+            };
         }
+
+        return { ...baseState, gamePhase: nextPhase };
     }
       
     case GameActionType.SET_ANSWER: {

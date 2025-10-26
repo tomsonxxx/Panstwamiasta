@@ -6,19 +6,22 @@ Ten plik służy jako oficjalny dziennik zmian (changelog) oraz jako dokumentacj
 
 ## Historia Zmian
 
-### 26.07.2024
+### 26.07.2024, 15:10
+**Polecenie AI:** "Napraw błąd połączenia z serwerem gry, problem z odtwarzaniem dźwięków i dokończ refaktoryzację projektu, aby działał poprawnie z Vite."
 - **Poprawka:** Naprawiono błąd połączenia z serwerem WebSocket (`timeout`) poprzez poprawną konfigurację projektu do pracy z Vite. Utworzono główny plik `vite.config.ts` i zaktualizowano `package.json` o skrypty do jednoczesnego uruchamiania klienta i serwera.
 - **Poprawka:** Rozwiązano problem z odtwarzaniem dźwięków w niektórych przeglądarkach (`Failed to load because no supported source was found`) przez zmianę typu MIME w danych audio z `audio/mpeg` na `audio/mp3` w `constants.ts`.
 - **Refaktoryzacja:** Sfinalizowano refaktoryzację struktury projektu opisaną w poprzednim wpisie. Usunięto zbędne pliki konfiguracyjne klienta i scalono zależności w głównym `package.json`, eliminując duplikację.
 - **Poprawka:** Usunięto niepotrzebny blok `importmap` z pliku `index.html`, ponieważ za zarządzanie zależnościami odpowiada teraz Vite.
 
-### 25.07.2024
-- **Refaktoryzacja:** Przeprowadzono gruntowną refaktoryzację struktury projektu. Usunięto zduplikowany katalog `/client` wraz z jego zawartością, co znacząco uprościło strukturę i usunęło potencjalne źródła błędów.
+### 25.07.2024, 18:45
+**Polecenie AI:** "Zrefaktoryzuj strukturę projektu, usuwając zduplikowany katalog /client, i zoptymalizuj działanie funkcji rozpoznawania mowy."
+- **Refaktoryzacja:** Przeprowadzono gruntowną refaktoryzację projektu. Usunięto zduplikowany katalog `/client` wraz z jego zawartością, co znacząco uprościło strukturę i usunęło potencjalne źródła błędów.
 - **Aktualizacja:** Zaktualizowano skrypty w głównym pliku `package.json` oraz konfigurację serwera `server/index.js`, aby odzwierciedlały nową, spłaszczoną strukturę projektu.
 - **Optymalizacja:** Wprowadzono optymalizację w komponencie `GamePlayScreen.tsx`. Logika rozpoznawania mowy została zrefaktoryzowana, aby instancja `SpeechRecognition` była tworzona tylko raz, co poprawia wydajność i stabilność tej funkcji.
 - **Weryfikacja:** Dokonano ogólnego przeglądu kodu pod kątem spójności i potencjalnych problemów.
 
-### 24.07.2024
+### 24.07.2024, 11:20
+**Polecenie AI:** "Dodaj plik CHANGELOG.md z historią zmian i dokumentacją, zaimplementuj rozpoznawanie mowy do wprowadzania odpowiedzi, a także napraw wszelkie błędy TypeScript w projekcie."
 - **Dodano:** Utworzono plik `CHANGELOG.md`.
 - **Dodano:** Stworzono szczegółową dokumentację techniczną opisującą aktualny stan aplikacji.
 - **Dodano:** Zaimplementowano funkcję rozpoznawania mowy na ekranie `GamePlayScreen.tsx`, pozwalającą na dyktowanie odpowiedzi. Dodano ikonę mikrofonu przy każdym polu tekstowym.
@@ -35,7 +38,7 @@ Ten plik służy jako oficjalny dziennik zmian (changelog) oraz jako dokumentacj
 
 ### 1. Ogólna Architektura
 
-Aplikacja jest zbudowana w oparciu o bibliotekę **React** z użyciem **TypeScript**. Wykorzystuje architekturę komponentową i zarządza stanem globalnym za pomocą mechanizmu Kontekstu (React Context). Nawigacja opiera się na `react-router-dom`. Aplikacja posiada również backend w Node.js z Express i Socket.IO do obsługi trybu multiplayer.
+Aplikacja jest zbudowana w oparciu uo bibliotekę **React** z użyciem **TypeScript**. Wykorzystuje architekturę komponentową i zarządza stanem globalnym za pomocą mechanizmu Kontekstu (React Context). Nawigacja opiera się na `react-router-dom`. Aplikacja posiada również backend w Node.js z Express i Socket.IO do obsługi trybu multiplayer.
 
 ### 2. Struktura Projektu
 

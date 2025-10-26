@@ -111,12 +111,13 @@ const MainMenuScreen: React.FC = () => {
       toast.error(kbStatus.message || "Nie można rozpocząć gry offline: Lokalna baza wiedzy nie jest załadowana. Sprawdź konsolę.", { duration: 5000 });
       return;
     }
-    navigate('/offline-bot-config');
+    // Inicjalizujemy grę od razu, ustawiając fazę na konfigurację botów
+    dispatch({ type: GameActionType.INITIALIZE_GAME, payload: { settings: gameState.settings, gameMode: 'solo-offline' } });
   }
 
   const handleMultiplayerGame = () => {
     if (!gameState.apiKeyOk) {
-      toast.error(`Nie można przejść do trybu wieloosobowego: Główny klucz API (API_KEY) jest nieprawidłowy. Funkcje AI (boty, walidacja) mogą być niedostępne.`, { duration: 6000 });
+      toast.error(`Nie można przejść do trybu wieloosobowego: Główny klucz API (API_KEY) jest nieprawidłowy. Funkcje AI (boty, walidacja) mogą być ograniczone.`, { duration: 6000 });
     }
     dispatch({type: GameActionType.SET_GAME_PHASE, payload: 'lobby'}); 
     navigate('/multiplayer');
